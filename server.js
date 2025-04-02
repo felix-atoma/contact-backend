@@ -39,7 +39,7 @@ const transporter = nodemailer.createTransport({
 
 // Root route for testing
 app.get("/", (req, res) => {
-  res.send("Server is running on Vercel 🚀");
+  res.status(200).send("Server is running on Vercel 🚀");
 });
 
 // Contact Route
@@ -55,7 +55,7 @@ app.post("/api/contact", async (req, res) => {
     const newMessage = new Message({ name, email, message });
     await newMessage.save();
 
-    // Send email to yourself (felixtaoma2@gmail.com)
+    // Send email to client email
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: process.env.CLIENT_EMAIL,
@@ -75,5 +75,12 @@ app.post("/api/contact", async (req, res) => {
   }
 });
 
-// Export app for Vercel
+// Export app for Vercel serverless deployment
 module.exports = app;
+
+// Ensure server listens in local environment (not serverless)
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
+}
