@@ -47,6 +47,7 @@ app.post("/api/contact", async (req, res) => {
   try {
     const { name, email, message } = req.body;
 
+    // Validation
     if (!name || !email || !message) {
       return res.status(400).json({ success: false, error: "All fields are required." });
     }
@@ -60,10 +61,7 @@ app.post("/api/contact", async (req, res) => {
       from: process.env.EMAIL_USER,
       to: process.env.CLIENT_EMAIL,
       subject: "New Contact Form Message",
-      text: `You received a new message from:
-      Name: ${name}
-      Email: ${email}
-      Message: ${message}`,
+      text: `You received a new message from:\nName: ${name}\nEmail: ${email}\nMessage: ${message}`,
     };
 
     await transporter.sendMail(mailOptions);
