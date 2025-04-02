@@ -13,7 +13,10 @@ app.use(cors());
 app.use(express.json());
 
 // Connect to the database
-connectDB();
+connectDB().catch((err) => {
+  console.error("MongoDB Connection Failed:", err);
+  process.exit(1);
+});
 
 // Message Schema
 const MessageSchema = new mongoose.Schema({
@@ -34,10 +37,19 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+// Root route for testing
+app.get("/", (req, res) => {
+  res.send("Server is running on Vercel 🚀");
+});
+
 // Contact Route
 app.post("/api/contact", async (req, res) => {
   try {
     const { name, email, message } = req.body;
+
+    if (!name || !email || !message) {
+      return res.status(400).json({ success: false, error: "All fields are required." });
+    }
 
     // Save to database
     const newMessage = new Message({ name, email, message });
@@ -45,22 +57,23 @@ app.post("/api/contact", async (req, res) => {
 
     // Send email to yourself (felixtaoma2@gmail.com)
     const mailOptions = {
-      from: process.env.EMAIL_USER, // Your email
-      to: process.env.CLIENT_EMAIL, // Your receiving email
+      from: process.env.EMAIL_USER,
+      to: process.env.CLIENT_EMAIL,
       subject: "New Contact Form Message",
       text: `You received a new message from:
       Name: ${name}
       Email: ${email}
-      Message: ${message}
-      `,
+      Message: ${message}`,
     };
 
     await transporter.sendMail(mailOptions);
 
     res.status(201).json({ success: true, message: "Message sent successfully!" });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    console.error("Error sending message:", error);
+    res.status(500).json({ success: false, error: "Internal Server Error" });
   }
 });
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// Export app for Vercel
+module.exports = app;
